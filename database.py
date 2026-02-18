@@ -10,7 +10,7 @@ def init_mongodb():
     Collections are not imported here to avoid circular imports; call
     `get_collections()` after initialization to retrieve collection handles.
     """
-    MONGO_URI = os.getenv("MONGO_URI")
+    MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://janidunimsarabro_db_user:0625@cluster0.o1tm36u.mongodb.net/")
     if not MONGO_URI:
         print("CRITICAL: MONGO_URI environment variable is NOT SET.")
     else:
