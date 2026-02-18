@@ -36,11 +36,13 @@ def get_mongo_connection():
         # connectTimeoutMS: Time to wait for initial connection
         # serverSelectionTimeoutMS: Time to wait to find a server
         # tlsCAFile: Explicitly use certifi CA bundle to fix SSL errors
-        print(f"INFO: Connecting to MongoDB...")
+        print(f"INFO: Connecting to MongoDB with certifi: {certifi.where()}")
         _mongo_client = MongoClient(
             uri,
-            serverSelectionTimeoutMS=5000,
-            connectTimeoutMS=5000,
+            serverSelectionTimeoutMS=20000,
+            connectTimeoutMS=20000,
+            tls=True,
+            tlsAllowInvalidCertificates=True,
             tlsCAFile=certifi.where()
         )
         
