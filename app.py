@@ -21,20 +21,24 @@ def create_app():
     login_manager.init_app(app)
 
     # Initialize MongoDB
-    mongo_client, db_mongo = init_mongodb()
-    COLS = get_collections(db_mongo)
-
-    # Wire collections into models and seed initial data
-    from models import User, Project, Article, Reminder, Member, ContentBlock, init_collections
-    init_collections(COLS)
-    
-    # Optional: Seed if empty
-    seed_database(db_mongo)
-    
-    return app, COLS
+    try:
+        mongo_client, db_mongo = init_mongodb()
+        COLS = get_collections(db_mongo)
+        
+        # Wire collections into models and seed initial data
+        from models import init_collections
+        init_collections(COLS)
+        
+        # Optional: Seed if empty
+        # seed_database(db_mongo)
+        
+        return app, COLS
+    except Exception as e:
+        print(f"CRITICAL: Failed to connect to MongoDB: {e}")
+        return app, None
 
 app, COLS = create_app()
-users_col = COLS['users']
+users_col = COLS['users'] if COLS else None
 
 def get_user_query(uid):
     if str(uid).isdigit():

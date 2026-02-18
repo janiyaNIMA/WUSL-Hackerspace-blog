@@ -12,13 +12,6 @@ def init_mongodb():
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
     db_mongo = client.get_database('hackerspace_auth')
 
-    # Connection test
-    try:
-        client.admin.command('ping')
-        print("✅ MongoDB Connection Successful!")
-    except Exception as e:
-        print(f"❌ MongoDB Connection Failed: {e}")
-
     return client, db_mongo
 
 
