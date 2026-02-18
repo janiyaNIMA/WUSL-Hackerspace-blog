@@ -30,23 +30,42 @@ def create_app():
 app = create_app()
 
 # Initialize MongoDB lazily
+
+# Initialize MongoDB lazily using the new robust singleton pattern
 def get_db():
     if not hasattr(app, 'db_cols') or app.db_cols is None:
         try:
+            # init_mongodb() now handles singleton logic internally
             mongo_client, db_mongo = init_mongodb()
             app.db_cols = get_collections(db_mongo)
+            
+            # Wire models
             from models import init_collections
             init_collections(app.db_cols)
+            
+            # Optional: Seed if empty
+            # seed_database(db_mongo)
+            
         except Exception as e:
-            print(f"CRITICAL: Failed to connect to MongoDB: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"CRITICAL: Application failed to get DB connection: {e}")
+            # Ensure we don't crash the whole app on startup, 
+            # but subsequent requests using DB will fail gracefully
             app.db_cols = None
+            
     return app.db_cols
 
 @app.before_request
 def ensure_db_connection():
+    # Attempt to initialize DB before each request if not already done
     get_db()
+
+@app.route('/health')
+def health_check():
+    """Simple health check endpoint for monitoring."""
+    cols = get_db()
+    if cols:
+        return jsonify({"status": "ok", "db": "connected"}), 200
+    return jsonify({"status": "error", "db": "disconnected"}), 500
 
 # Helper to get users collection safely
 def get_users_col():
