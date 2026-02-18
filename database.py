@@ -2,6 +2,8 @@ import os
 from pymongo import MongoClient
 
 
+import certifi
+
 def init_mongodb():
     """Initialize MongoDB client and return client and primary database object.
 
@@ -9,7 +11,7 @@ def init_mongodb():
     `get_collections()` after initialization to retrieve collection handles.
     """
     MONGO_URI = os.getenv("MONGO_URI")
-    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000, tlsCAFile=certifi.where())
     db_mongo = client.get_database('hackerspace_auth')
 
     return client, db_mongo
