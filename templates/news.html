@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- News Section -->
+<section class="content-section">
+    <h2 style="margin-bottom: 2rem; color: var(--dark-brown); border-bottom: 2px solid var(--tan); padding-bottom: 0.5rem;">
+        <i class="fa-solid fa-newspaper"></i> Latest News & Updates
+    </h2>
+    <div id="articles-grid" class="projects-grid">
+        <!-- Dynamic articles will be loaded here -->
+        <p>Loading articles...</p>
+    </div>
+</section>
+<!-- Projects Section -->
+<section class="content-section" style="margin-bottom: 4rem;">
+    <h2 style="margin-bottom: 2rem; color: var(--dark-brown); border-bottom: 2px solid var(--tan); padding-bottom: 0.5rem;">
+        <i class="fa-solid fa-microchip"></i> Featured Projects
+    </h2>
+    <div id="projects-grid" class="projects-grid">
+        <!-- Dynamic projects will be loaded here -->
+        <p>Loading projects...</p>
+    </div>
+</section>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof fetchProjectsOnNews === 'function') {
+            fetchProjectsOnNews();
+        }
+        if (typeof fetchArticlesOnNews === 'function') {
+            fetchArticlesOnNews();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero" style="margin-bottom: 2rem;">
+    <h1>About WUSL Hackerspace</h1>
+    <p>Building the future through community-driven innovation.</p>
+</section>
+
+<section class="content-section" style="background: white; padding: 2rem; border-radius: 12px; border: 1px solid var(--gray-mid); margin-bottom: 3rem;">
+    <h3 style="color: var(--dark-brown); margin-bottom: 1rem;"><i class="fa-solid fa-bullseye"></i> Our Mission</h3>
+    <p style="margin-bottom: 1.5rem;">
+        WUSL Hackerspace is a collaborative community laboratory for students, researchers, and hobbyists 
+        passionate about technology, hardware, and software. We provide the tools, space, and community 
+        needed to turn ambitious ideas into functional prototypes.
+    </p>
+    
+    <h3 style="color: var(--dark-brown); margin-bottom: 1rem;"><i class="fa-solid fa-star"></i> What We Offer</h3>
+    <ul style="list-style-type: disc; padding-left: 1.5rem; color: var(--text-muted); line-height: 2;">
+        <li>24/7 access to high-end soldering stations and oscilloscopes.</li>
+        <li>A diverse community of hackers and engineers to collaborate with.</li>
+        <li>Regular workshops on embedded systems, web development, and AI.</li>
+        <li>Support for innovative projects from conception to deployment.</li>
+    </ul>
+</section>
+
+<!-- Contact Section -->
+<section class="content-section">
+    <h2 style="margin-bottom: 2rem; color: var(--dark-brown); border-bottom: 2px solid var(--tan); padding-bottom: 0.5rem;">
+        <i class="fa-solid fa-envelope"></i> Get in Touch
+    </h2>
+    <div class="contact-card" style="background: white; padding: 2rem; border-radius: 12px; border: 1px solid var(--gray-mid);">
+        <p style="margin-bottom: 1.5rem; color: var(--text-muted);">Have a question or want to join? Send us a message!</p>
+        <form id="contact-form" style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <label for="name" style="font-weight: 500;">Name</label>
+                <input type="text" id="name" name="name" placeholder="Your full name" style="padding: 1rem; border-radius: 8px; border: 1px solid var(--gray-mid); background: var(--gray-light);" required>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <label for="email" style="font-weight: 500;">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="e.g. alex@example.com" style="padding: 1rem; border-radius: 8px; border: 1px solid var(--gray-mid); background: var(--gray-light);" required>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <label for="message" style="font-weight: 500;">Message</label>
+                <textarea id="message" name="message" rows="5" placeholder="Tell us what's on your mind..." style="padding: 1rem; border-radius: 8px; border: 1px solid var(--gray-mid); background: var(--gray-light); resize: vertical;" required></textarea>
+            </div>
+            <button type="submit" class="nav-btn" style="width: fit-content; align-self: flex-end; padding: 1rem 2.5rem;">
+                <i class="fa-solid fa-paper-plane"></i> Send Message
+            </button>
+        </form>
+    </div>
+</section>
+{% endblock %}

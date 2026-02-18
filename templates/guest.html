@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome | WUSL Hackerspace{% endblock %}
+
+{% block content %}
+<section class="hero guest-hero">
+    <h1>Welcome to WUSL Hackerspace</h1>
+    <p>Discover innovation, collaboration, and cutting-edge technology.</p>
+    <div class="guest-actions">
+        <a href="{{ url_for('login') }}" class="nav-btn">Login</a>
+        <a href="{{ url_for('signup') }}" class="nav-btn" style="background-color: var(--mint);">Sign Up</a>
+    </div>
+</section>
+
+<section class="content-section" style="text-align: center; margin-top: 3rem;">
+    <h2>What is WUSL Hackerspace?</h2>
+    <p style="color: var(--text-muted); max-width: 600px; margin: 1.5rem auto;">
+        We are a community of creators, engineers, and hackers dedicated to building the future. 
+        Members get access to exclusive projects, daily updates, and our internal collaborative network.
+    </p>
+    <div class="feature-grid">
+        <div class="feature-item">
+            <span class="feature-icon">🚀</span>
+            <h4>Projects</h4>
+            <p>From quantum tracking to neural meshes.</p>
+        </div>
+        <div class="feature-item">
+            <span class="feature-icon">📰</span>
+            <h4>Insights</h4>
+            <p>Stay updated with our latest findings.</p>
+        </div>
+        <div class="feature-item">
+            <span class="feature-icon">🤝</span>
+            <h4>Community</h4>
+            <p>Join world-class hackers and researchers.</p>
+        </div>
+    </div>
+</section>
+
+<style>
+.guest-hero {
+    padding: 5rem 2rem !important;
+    background: linear-gradient(135deg, var(--dark-brown), var(--olive)) !important;
+}
+.guest-actions {
+    margin-top: 2rem;
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+}
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+.feature-item {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: 12px;
+    border: 1px solid var(--gray-mid);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+}
+.feature-icon { font-size: 2.5rem; display: block; margin-bottom: 1rem; }
+.feature-item h4 { color: var(--dark-brown); margin-bottom: 0.5rem; }
+.feature-item p { font-size: 0.9rem; color: var(--text-muted); }
+</style>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="content-section">
+    <h2 style="margin-bottom: 1.5rem; color: var(--dark-brown);">Meet Our Members</h2>
+    <div id="members-grid" class="projects-grid">
+        <!-- Dynamic members will be loaded here -->
+        <p>Loading members...</p>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof fetchMembers === 'function') {
+            fetchMembers();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile | WUSL Hackerspace{% endblock %}
+
+{% block content %}
+<section class="content-section edit-profile-container">
+    <div class="auth-card">
+        <h2><i class="fa-solid fa-user-gear"></i> Edit Your Profile</h2>
+        <p>Keep your credentials and appearance up to date.</p>
+
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="flash-messages">
+              {% for message in messages %}
+                <p class="flash">{{ message }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" class="auth-form">
+            <!-- Profile Photo Section -->
+            <div class="form-group">
+                <label>Choose Your Avatar</label>
+                <div class="avatar-selection-container">
+                    <div class="current-avatar-preview big-preview">
+                        {% if current_user.avatar %}
+                            <img src="{{ current_user.avatar }}" id="avatar-preview">
+                        {% else %}
+                            <i class="fa-solid fa-user-astronaut" id="avatar-icon"></i>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="avatar-grid">
+                        {% set avatars = [
+                            'yuji_itadori.png', 
+                            'megumi_fushiguro.png', 
+                            'nobara_kugisaki.png',
+                            'maki_zenin.png', 
+                            'satoru_gojo.png', 
+                            'nobara_kugisaki_alt.png',
+                            'toge_inumaki.png', 
+                            'kento_nanami_alt.png', 
+                            'kento_nanami.png'
+                        ] %}
+                        {% for avatar_file in avatars %}
+                        {% set avatar_url = url_for('static', filename='img/avatars/' + avatar_file) %}
+                        <div class="avatar-option {% if current_user.avatar == avatar_url %}selected{% endif %}" 
+                             onclick="selectAvatar('{{ avatar_url }}', this)">
+                            <img src="{{ avatar_url }}" alt="{{ avatar_file.split('.')[0] | replace('_', ' ') | title }}">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" id="avatar" name="avatar" value="{{ current_user.avatar }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="username">Username</label>
+                <div style="position: relative;">
+                    <i class="fa-solid fa-user" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--mauve);"></i>
+                    <input type="text" id="username" name="username" value="{{ current_user.username }}" style="padding-left: 2.8rem;" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <div style="position: relative;">
+                    <i class="fa-solid fa-envelope" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--mauve);"></i>
+                    <input type="email" id="email" name="email" value="{{ current_user.email }}" style="padding-left: 2.8rem;" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Security</label>
+                <div style="position: relative;">
+                    <i class="fa-solid fa-lock" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--mauve);"></i>
+                    <input type="password" id="password" name="password" placeholder="New Password (leave blank to keep current)" style="padding-left: 2.8rem;">
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="nav-btn auth-btn save-btn">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                </button>
+                <a href="{{ url_for('index') }}" class="cancel-btn">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</section>
+
+<script>
+function selectAvatar(url, element) {
+    // Update hidden input
+    document.getElementById('avatar').value = url;
+    
+    // Update preview
+    const previewContainer = document.querySelector('.big-preview');
+    previewContainer.innerHTML = `<img src="${url}" id="avatar-preview">`;
+    
+    // Update selected state in grid
+    document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));
+    element.classList.add('selected');
+}
+</script>
+{% endblock %}

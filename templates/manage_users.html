@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Users | WUSL Admin{% endblock %}
+
+{% block content %}
+<section class="content-section" style="max-width: 1000px; margin: 0 auto;">
+    <div class="auth-card" style="text-align: left;">
+        <h2><i class="fa-solid fa-users-gear"></i> User Management</h2>
+        <p>Promote users to authors or admins, and manage community access.</p>
+
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="flash-messages">
+              {% for message in messages %}
+                <p class="flash">{{ message }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="user-list-container">
+            <table class="user-management-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Current Role</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div class="mini-avatar">
+                                    {% if user.avatar %}
+                                        <img src="{{ user.avatar }}">
+                                    {% else %}
+                                        <i class="fa-solid fa-user-astronaut"></i>
+                                    {% endif %}
+                                </div>
+                                <strong>{{ user.username }}</strong>
+                            </div>
+                        </td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            <span class="role-tag {% if user.role == 'super_admin' %}admin{% elif user.role == 'author' %}author{% endif %}">
+                                {{ user.role | replace('_', ' ') | title }}
+                            </span>
+                        </td>
+                        <td>
+                            <form method="POST" style="display: flex; gap: 0.5rem; align-items: center;">
+                                <input type="hidden" name="user_id" value="{{ user._id }}">
+                                <select name="role" class="role-select">
+                                    <option value="user" {% if user.role == 'user' %}selected{% endif %}>User</option>
+                                    <option value="author" {% if user.role == 'author' %}selected{% endif %}>Author</option>
+                                    <option value="super_admin" {% if user.role == 'super_admin' %}selected{% endif %}>Admin</option>
+                                </select>
+                                <button type="submit" class="nav-btn auth-btn" style="padding: 0.4rem 0.8rem !important; margin: 0; font-size: 0.8rem;">
+                                    Update
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<style>
+.user-list-container {
+    margin-top: 2rem;
+    overflow-x: auto;
+}
+
+.user-management-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--white);
+    border-radius: 12px;
+}
+
+.user-management-table th {
+    padding: 1.2rem;
+    text-align: left;
+    background: var(--gray-light);
+    color: var(--dark-brown);
+    font-weight: 700;
+    border-bottom: 2px solid var(--gray-mid);
+}
+
+.user-management-table td {
+    padding: 1.2rem;
+    border-bottom: 1px solid var(--gray-mid);
+    color: var(--text-dark);
+}
+
+.mini-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: var(--gray-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid var(--mauve);
+}
+
+.mini-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mini-avatar i {
+    font-size: 0.9rem;
+    color: var(--mauve);
+}
+
+.role-select {
+    padding: 0.4rem;
+    border-radius: 6px;
+    border: 1px solid var(--gray-mid);
+    background: var(--gray-light);
+    font-size: 0.85rem;
+    outline: none;
+}
+
+.role-select:focus {
+    border-color: var(--mauve);
+}
+
+@media (max-width: 768px) {
+    .user-management-table th:nth-child(2),
+    .user-management-table td:nth-child(2) {
+        display: none;
+    }
+}
+</style>
+{% endblock %}

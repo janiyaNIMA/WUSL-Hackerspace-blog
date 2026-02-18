@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero">
+    <h1>Welcome to WUSL Hackerspace</h1>
+    <p>Empowering the next generation of engineers, hackers, and creators. Explore our latest initiatives and join the community.</p>
+</section>
+
+<section class="content-section">
+    <h2 id="section-title" style="margin-bottom: 1.5rem; color: var(--dark-brown);">Featured Projects</h2>
+    <div id="content-grid" class="projects-grid">
+        <!-- Dynamic content will be loaded here -->
+        <p>Loading...</p>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof fetchProjects === 'function') {
+            fetchProjects();
+        }
+    });
+</script>
+{% endblock %}
