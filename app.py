@@ -20,6 +20,11 @@ def create_app():
 
     bcrypt.init_app(app)
     login_manager.init_app(app)
+
+    # Register Debug Route
+    from debug_routes import debug_bp
+    app.register_blueprint(debug_bp)
+    
     return app
 
 app = create_app()
