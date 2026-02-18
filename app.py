@@ -7,9 +7,8 @@ from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
 # Import separated modules
-from extensions import db, bcrypt, login_manager
-from models import User, Project, Article, Reminder, Member, ContentBlock
-from database import init_mongodb, seed_database
+from extensions import bcrypt, login_manager
+from database import init_mongodb, get_collections, seed_database
 
 # Load .env file
 load_dotenv()
@@ -17,21 +16,18 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default-key-if-missing')
 
-# --- SQLite Configuration ---
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'hackerspace.db')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Initialize extensions
-db.init_app(app)
 bcrypt.init_app(app)
 login_manager.init_app(app)
 
 # Initialize MongoDB
-mongo_client, users_col = init_mongodb()
+mongo_client, db_mongo = init_mongodb()
+COLS = get_collections(db_mongo)
 
-# Seed SQLite database
-seed_database(app)
+# Wire collections into models and seed initial data
+from models import User, Project, Article, Reminder, Member, ContentBlock, init_collections
+init_collections(COLS)
+users_col = COLS['users']
+seed_database(db_mongo)
 
 def get_user_query(uid):
     if str(uid).isdigit():
@@ -174,7 +170,7 @@ def create_article():
         
         try:
             blocks = json.loads(blocks_data_str)
-            
+
             # Handle file uploads for each block
             for block in blocks:
                 if block.get('file_key') and block['file_key'] in request.files:
@@ -186,43 +182,39 @@ def create_article():
                         save_path = os.path.join('static', 'uploads', 'content', filename)
                         file.save(os.path.join(app.root_path, save_path))
                         block['value'] = '/' + save_path.replace('\\', '/')
-            
+
             if content_type == 'news':
-                new_item = Article(
-                    title=title, 
-                    author=current_user.username,
-                    author_id=current_user.id
-                )
+                new_id = Article.create({
+                    'title': title,
+                    'author': current_user.username,
+                    'author_id': current_user.id,
+                    'is_private': False
+                })
             else:
-                new_item = Project(
-                    title=title, 
-                    color="#fdfaf6",
-                    author_id=current_user.id
-                )
-            
-            db.session.add(new_item)
-            db.session.flush() # Get the ID for foreign keys
+                new_id = Project.create({
+                    'title': title,
+                    'color': '#fdfaf6',
+                    'author_id': current_user.id,
+                    'is_private': False
+                })
 
             # Create structured blocks
             for i, block_data in enumerate(blocks):
-                new_block = ContentBlock(
-                    article_id=new_item.id if content_type == 'news' else None,
-                    project_id=new_item.id if content_type == 'project' else None,
-                    type=block_data['type'],
-                    sub_type=block_data['sub_type'],
-                    value=block_data.get('value', ''),
-                    sequence=i
-                )
-                db.session.add(new_block)
+                block_doc = {
+                    'article_id': new_id if content_type == 'news' else None,
+                    'project_id': new_id if content_type == 'project' else None,
+                    'type': block_data['type'],
+                    'sub_type': block_data['sub_type'],
+                    'value': block_data.get('value', ''),
+                    'sequence': i
+                }
+                ContentBlock.create(block_doc)
 
-            db.session.commit()
-            
             target_page = 'news' if content_type == 'news' else 'index'
             flash(f'{"Article" if content_type == "news" else "Project"} published successfully!')
             return redirect(url_for(target_page))
-            
+
         except Exception as e:
-            db.session.rollback()
             print(f"Error publishing: {e}")
             flash(f'Error publishing content: {e}')
             
@@ -247,30 +239,31 @@ def manage_content():
     
     # Authors see their own, Admins see everything
     if current_user.is_admin:
-        articles = Article.query.all()
-        projects = Project.query.all()
+        articles = Article.find()
+        projects = Project.find()
     else:
-        articles = Article.query.filter_by(author_id=current_user.id).all()
-        projects = Project.query.filter_by(author_id=current_user.id).all()
+        articles = Article.find_by_author(current_user.id)
+        projects = Project.find_by_author(current_user.id)
         
     return render_template('manage_content.html', articles=articles, projects=projects)
 
-@app.route('/edit-content/<type>/<int:id>', methods=['GET', 'POST'])
+@app.route('/edit-content/<type>/<id>', methods=['GET', 'POST'])
 @login_required
 def edit_content(type, id):
-    item = Article.query.get(id) if type == 'news' else Project.query.get(id)
+    item = Article.get(id) if type == 'news' else Project.get(id)
     if not item:
         flash('Item not found.')
         return redirect(url_for('manage_content'))
-        
-    if item.author_id != current_user.id and not current_user.is_admin:
+
+    author_id = item.get('author_id') if isinstance(item, dict) else getattr(item, 'author_id', None)
+    if author_id != current_user.id and not current_user.is_admin:
         flash('Permission denied.')
         return redirect(url_for('manage_content'))
 
     if request.method == 'POST':
         title = request.form.get('title')
         blocks_data_str = request.form.get('blocks_data')
-        
+
         try:
             blocks = json.loads(blocks_data_str)
             # Handle new file uploads
@@ -282,70 +275,87 @@ def edit_content(type, id):
                         save_path = os.path.join('static', 'uploads', 'content', filename)
                         file.save(os.path.join(app.root_path, save_path))
                         block['value'] = '/' + save_path.replace('\\', '/')
-            
-            item.title = title
-            
+
+            # Update title
+            if type == 'news':
+                Article.update(id, {'title': title})
+            else:
+                Project.update(id, {'title': title})
+
             # Clear existing blocks and recreate
-            ContentBlock.query.filter_by(article_id=item.id if type == 'news' else None, 
-                                       project_id=item.id if type != 'news' else None).delete()
-            
+            if type == 'news':
+                ContentBlock.delete_by_article(id)
+            else:
+                ContentBlock.delete_by_project(id)
+
             for i, block_data in enumerate(blocks):
-                new_block = ContentBlock(
-                    article_id=item.id if type == 'news' else None,
-                    project_id=item.id if type != 'news' else None,
-                    type=block_data['type'],
-                    sub_type=block_data['sub_type'],
-                    value=block_data.get('value', ''),
-                    sequence=i
-                )
-                db.session.add(new_block)
-                
-            db.session.commit()
+                block_doc = {
+                    'article_id': id if type == 'news' else None,
+                    'project_id': id if type != 'news' else None,
+                    'type': block_data['type'],
+                    'sub_type': block_data['sub_type'],
+                    'value': block_data.get('value', ''),
+                    'sequence': i
+                }
+                ContentBlock.create(block_doc)
+
             flash('Content updated successfully!')
             return redirect(url_for('manage_content'))
-            
+
         except Exception as e:
-            db.session.rollback()
             flash(f'Error updating content: {e}')
-            
+
     # Pass existing blocks as JSON list for the frontend editor
-    blocks_list = [b.to_dict() for b in item.blocks]
+    if type == 'news':
+        blocks = ContentBlock.find_by_article(id)
+    else:
+        blocks = ContentBlock.find_by_project(id)
+    blocks_list = [{'type': b.get('type'), 'sub_type': b.get('sub_type'), 'value': b.get('value')} for b in blocks]
     return render_template('create_article.html', 
                           item=item, 
                           content_type=type, 
                           existing_blocks=json.dumps(blocks_list))
 
-@app.route('/toggle-visibility/<type>/<int:id>')
+@app.route('/toggle-visibility/<type>/<id>')
 @login_required
 def toggle_visibility(type, id):
-    item = Article.query.get(id) if type == 'news' else Project.query.get(id)
+    item = Article.get(id) if type == 'news' else Project.get(id)
     if not item:
         flash('Item not found.')
         return redirect(url_for('manage_content'))
-        
-    if item.author_id != current_user.id and not current_user.is_admin:
+
+    author_id = item.get('author_id') if isinstance(item, dict) else getattr(item, 'author_id', None)
+    if author_id != current_user.id and not current_user.is_admin:
         flash('Permission denied.')
         return redirect(url_for('manage_content'))
-        
-    item.is_private = not item.is_private
-    db.session.commit()
+
+    current = item.get('is_private', False) if isinstance(item, dict) else getattr(item, 'is_private', False)
+    if type == 'news':
+        Article.update(id, {'is_private': not current})
+    else:
+        Project.update(id, {'is_private': not current})
+
     flash('Visibility updated.')
     return redirect(url_for('manage_content'))
 
-@app.route('/delete-content/<type>/<int:id>')
+@app.route('/delete-content/<type>/<id>')
 @login_required
 def delete_content(type, id):
-    item = Article.query.get(id) if type == 'news' else Project.query.get(id)
+    item = Article.get(id) if type == 'news' else Project.get(id)
     if not item:
         flash('Item not found.')
         return redirect(url_for('manage_content'))
-        
-    if item.author_id != current_user.id and not current_user.is_admin:
+
+    author_id = item.get('author_id') if isinstance(item, dict) else getattr(item, 'author_id', None)
+    if author_id != current_user.id and not current_user.is_admin:
         flash('Permission denied.')
         return redirect(url_for('manage_content'))
-        
-    db.session.delete(item)
-    db.session.commit()
+
+    if type == 'news':
+        Article.delete(id)
+    else:
+        Project.delete(id)
+
     flash('Item deleted successfully.')
     return redirect(url_for('manage_content'))
 
@@ -382,22 +392,24 @@ def manage_users():
 @app.route('/api/projects')
 def get_projects():
     # Only return public projects
-    projects = Project.query.filter_by(is_private=False).all()
-    return jsonify([p.to_dict() for p in projects])
+    projects = Project.find_public()
+    return jsonify(projects)
 
 @app.route('/api/articles')
 def get_articles():
     # Only return public articles
-    articles = Article.query.filter_by(is_private=False).all()
-    return jsonify([a.to_dict() for a in articles])
+    articles = Article.find_public()
+    return jsonify(articles)
 
 @app.route('/api/reminders')
 def get_reminders():
-    return jsonify([r.to_dict() for r in Reminder.query.all()])
+    reminders = Reminder.find_all()
+    return jsonify(reminders)
 
 @app.route('/api/members')
 def get_members():
-    return jsonify([m.to_dict() for m in Member.query.all()])
+    members = Member.find_all()
+    return jsonify(members)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
