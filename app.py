@@ -13,32 +13,38 @@ from database import init_mongodb, get_collections, seed_database
 # Load .env file (only for local development)
 load_dotenv()
 
+
 def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default-key-if-missing')
 
     bcrypt.init_app(app)
     login_manager.init_app(app)
+    return app
 
-    # Initialize MongoDB
-    try:
-        mongo_client, db_mongo = init_mongodb()
-        COLS = get_collections(db_mongo)
-        
-        # Wire collections into models and seed initial data
-        from models import init_collections
-        init_collections(COLS)
-        
-        # Optional: Seed if empty
-        # seed_database(db_mongo)
-        
-        return app, COLS
-    except Exception as e:
-        print(f"CRITICAL: Failed to connect to MongoDB: {e}")
-        return app, None
+app = create_app()
 
-app, COLS = create_app()
-users_col = COLS['users'] if COLS else None
+# Initialize MongoDB lazily
+def get_db():
+    if not hasattr(app, 'db_cols') or app.db_cols is None:
+        try:
+            mongo_client, db_mongo = init_mongodb()
+            app.db_cols = get_collections(db_mongo)
+            from models import init_collections
+            init_collections(app.db_cols)
+        except Exception as e:
+            # print(f"CRITICAL: Failed to connect to MongoDB: {e}")
+            app.db_cols = None
+    return app.db_cols
+
+@app.before_request
+def ensure_db_connection():
+    get_db()
+
+# Helper to get users collection safely
+def get_users_col():
+    cols = get_db()
+    return cols['users'] if cols else None
 
 def get_user_query(uid):
     if str(uid).isdigit():
@@ -53,10 +59,12 @@ def get_user_query(uid):
 def load_user(user_id):
     try:
         query = get_user_query(user_id)
-        user_data = users_col.find_one(query)
-        if user_data:
-            # print(f"--- [AUTH DEBUG] Loaded: {user_data.get('username')} ---")
-            return User(user_data)
+        users_col = get_users_col()
+        if users_col:
+            user_data = users_col.find_one(query)
+            if user_data:
+                # print(f"--- [AUTH DEBUG] Loaded: {user_data.get('username')} ---")
+                return User(user_data)
     except Exception as e:
         print(f"--- [AUTH ERROR] Failed to load user: {e} ---")
     return None
@@ -70,6 +78,7 @@ def signup():
         password = request.form.get('password')
         
         try:
+            users_col = get_users_col()
             if users_col.find_one({"email": email}):
                 flash('Email already exists')
                 return redirect(url_for('signup'))
@@ -105,6 +114,7 @@ def login():
         password = request.form.get('password')
         
         try:
+            users_col = get_users_col()
             user_data = users_col.find_one({"email": email})
             if user_data and bcrypt.check_password_hash(user_data['password'], password):
                 user_obj = User(user_data)
@@ -144,6 +154,7 @@ def edit_profile():
             update_data["password"] = bcrypt.generate_password_hash(password).decode('utf-8')
 
         try:
+            users_col = get_users_col()
             users_col.update_one(
                 get_user_query(current_user.id),
                 {"$set": update_data}
@@ -382,6 +393,7 @@ def manage_users():
         new_role = request.form.get('role')
         
         try:
+            users_col = get_users_col()
             users_col.update_one(
                 get_user_query(user_id),
                 {"$set": {"role": new_role}}
@@ -393,6 +405,7 @@ def manage_users():
 
     # Fetch all users
     try:
+        users_col = get_users_col()
         users = list(users_col.find())
         return render_template('manage_users.html', users=users)
     except Exception as e:
