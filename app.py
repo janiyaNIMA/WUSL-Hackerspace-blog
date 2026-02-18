@@ -10,24 +10,31 @@ from dotenv import load_dotenv
 from extensions import bcrypt, login_manager
 from database import init_mongodb, get_collections, seed_database
 
-# Load .env file
+# Load .env file (only for local development)
 load_dotenv()
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default-key-if-missing')
+def create_app():
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default-key-if-missing')
 
-bcrypt.init_app(app)
-login_manager.init_app(app)
+    bcrypt.init_app(app)
+    login_manager.init_app(app)
 
-# Initialize MongoDB
-mongo_client, db_mongo = init_mongodb()
-COLS = get_collections(db_mongo)
+    # Initialize MongoDB
+    mongo_client, db_mongo = init_mongodb()
+    COLS = get_collections(db_mongo)
 
-# Wire collections into models and seed initial data
-from models import User, Project, Article, Reminder, Member, ContentBlock, init_collections
-init_collections(COLS)
+    # Wire collections into models and seed initial data
+    from models import User, Project, Article, Reminder, Member, ContentBlock, init_collections
+    init_collections(COLS)
+    
+    # Optional: Seed if empty
+    seed_database(db_mongo)
+    
+    return app, COLS
+
+app, COLS = create_app()
 users_col = COLS['users']
-seed_database(db_mongo)
 
 def get_user_query(uid):
     if str(uid).isdigit():
