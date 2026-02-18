@@ -119,17 +119,18 @@ def login():
         
         try:
             users_col = get_users_col()
-            if not users_col:
-                flash("Database connection failed. Please check server logs.")
-                return redirect(url_for('login'))
-
             user_data = users_col.find_one({"email": email})
-            if user_data and bcrypt.check_password_hash(user_data['password'], password):
+            
+            if not user_data:
+                print(f"❌ Login failed: User {email} not found.")
+                flash('Invalid email or password')
+            elif bcrypt.check_password_hash(user_data['password'], password):
                 user_obj = User(user_data)
                 login_user(user_obj)
                 print(f"✅ User {email} logged in successfully.")
                 return redirect(url_for('index'))
             else:
+                print(f"❌ Login failed: Password mismatch for {email}.")
                 flash('Invalid email or password')
         except Exception as e:
             print(f"❌ DATABASE ERROR during login: {e}")
