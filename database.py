@@ -8,7 +8,7 @@ def init_mongodb():
     Collections are not imported here to avoid circular imports; call
     `get_collections()` after initialization to retrieve collection handles.
     """
-    MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+    MONGO_URI = os.getenv("MONGO_URI")
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
     db_mongo = client.get_database('hackerspace_auth')
 
