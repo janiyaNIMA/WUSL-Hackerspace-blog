@@ -79,6 +79,10 @@ def signup():
         
         try:
             users_col = get_users_col()
+            if not users_col:
+                flash("Database not ready. check MONGO_URI.")
+                return redirect(url_for('signup'))
+
             if users_col.find_one({"email": email}):
                 flash('Email already exists')
                 return redirect(url_for('signup'))
@@ -115,6 +119,10 @@ def login():
         
         try:
             users_col = get_users_col()
+            if not users_col:
+                flash("Database connection failed. Please check server logs.")
+                return redirect(url_for('login'))
+
             user_data = users_col.find_one({"email": email})
             if user_data and bcrypt.check_password_hash(user_data['password'], password):
                 user_obj = User(user_data)
