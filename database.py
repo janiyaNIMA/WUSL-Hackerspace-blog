@@ -11,6 +11,12 @@ def init_mongodb():
     `get_collections()` after initialization to retrieve collection handles.
     """
     MONGO_URI = os.getenv("MONGO_URI")
+    if not MONGO_URI:
+        print("CRITICAL: MONGO_URI environment variable is NOT SET.")
+    else:
+        # Mask password for logging
+        uri_log = MONGO_URI.split('@')[-1] if '@' in MONGO_URI else '...credentials hidden...'
+        print(f"DEBUG: Attempting to connect to MongoDB at ...@{uri_log}")
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000, tlsCAFile=certifi.where())
     db_mongo = client.get_database('hackerspace_auth')
 

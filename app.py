@@ -38,7 +38,9 @@ def get_db():
             from models import init_collections
             init_collections(app.db_cols)
         except Exception as e:
-            # print(f"CRITICAL: Failed to connect to MongoDB: {e}")
+            print(f"CRITICAL: Failed to connect to MongoDB: {e}")
+            import traceback
+            traceback.print_exc()
             app.db_cols = None
     return app.db_cols
 
