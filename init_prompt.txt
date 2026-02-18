@@ -1,0 +1,35 @@
+"System Role: You are an expert Full-Stack Python Developer.
+
+Objective: Build a responsive web application using Python Flask that matches the provided UI layout (WUSL Hackerspace).
+
+Core Technologies:
+
+Backend: Python 3.x with the Flask framework.
+
+Frontend: HTML5, CSS3 (using CSS Grid and Flexbox), and JavaScript (Fetch API).
+
+Data Handling: Use jsonify to send data from the Flask backend to the frontend.
+
+UI Requirements (Referencing Image):
+
+Navigation: A top bar with dark brown buttons: Home, News, Projects, Members, Contact, About.
+
+Layout: A three-column grid.
+
+Left Sidebar (Light Gray): A 'Daily Reminders' list with italicized items.
+
+Main Content (White/Gray): A large 'Welcome' hero section and two 'Project' cards containing a colored thumbnail and description.
+
+Right Sidebar: A 'Not for Ads' status box followed by empty placeholder blocks.
+
+Footer: A full-width olive-green banner with centered text.
+
+Functional Requirements:
+
+Create a Flask route /api/projects that returns a JSON list of project titles and descriptions.
+
+Use JavaScript fetch() to populate the Project cards dynamically on the frontend.
+
+Ensure the CSS uses the specific color palette from the image (Tan, Mauve, Gray, and Olive).
+
+Output: Provide the app.py, index.html, and style.css files."

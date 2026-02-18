@@ -1,0 +1,34 @@
+.env
+venv/
+__pycache__/
+
+# Bytecode
+*.pyc
+
+# pytest cache
+.pytest_cache/
+
+# Database
+*.sqlite
+*.db
+
+# Migrations
+migrations/
+
+# Uploaded files
+uploads/
+
+# reference images
+/ref_images
+
+# markdown files
+*.md
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# Node / build
+node_modules/
+dist/
+.sass-cache/

@@ -1,0 +1,8 @@
+testsite/
+├── templates/
+│   ├── base.html       # The parent layout (Shared)
+│   └── index.html      # The home page (Extends base.html)
+├── static/
+│   ├── css/style.css
+│   └── js/main.js
+└── app.py
