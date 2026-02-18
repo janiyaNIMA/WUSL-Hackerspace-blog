@@ -65,7 +65,7 @@ def load_user(user_id):
     try:
         query = get_user_query(user_id)
         users_col = get_users_col()
-        if users_col:
+        if users_col is not None:
             user_data = users_col.find_one(query)
             if user_data:
                 # print(f"--- [AUTH DEBUG] Loaded: {user_data.get('username')} ---")
@@ -84,7 +84,7 @@ def signup():
         
         try:
             users_col = get_users_col()
-            if not users_col:
+            if users_col is None:
                 flash("Database not ready. check MONGO_URI.")
                 return redirect(url_for('signup'))
 
@@ -124,6 +124,10 @@ def login():
         
         try:
             users_col = get_users_col()
+            if users_col is None:
+                flash("Database connection failed. Please check server logs.")
+                return redirect(url_for('login'))
+
             user_data = users_col.find_one({"email": email})
             
             if not user_data:
